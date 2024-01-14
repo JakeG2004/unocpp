@@ -259,10 +259,57 @@ void playCard(int currentAgent, vector<agent>& agents, vector<card>& deck, vecto
     printHand(currentAgent, agents);
 
     int choice;
+
     //Handle bad input
     while((cout << "The ID of the card you wish to play: " && !(cin >> choice)) || choice < 0 || choice > agents[currentAgent].hand.size() - 1)
         badInput();
 
+    card topCard = discard[discard.size() - 1];
+
+    //Failure state
+    if((agents[currentAgent].hand[choice].color != topCard.color && agents[currentAgent].hand[choice].num != topCard.num) && agents[currentAgent].hand[choice].num < WILD){
+        cout << "This card cannot be played" << endl;
+        return;
+    }
+
+    //In the event of a wild
+    if(agents[currentAgent].hand[choice].num >= WILD){
+        int colorChoice;
+
+        cout << "1) Red\n"
+        << "2) Yellow\n"
+        << "3) Green\n"
+        << "4) Blue\n";
+
+        //Handle bad input
+        while((cout << "Enter the number for the color you want: " && !(cin >> colorChoice)) || colorChoice < 1 || colorChoice > 4)
+            badInput();
+
+        card tmp;
+        switch(colorChoice){
+            case 1:
+                tmp.color = "Red";
+                break;
+            case 2:
+                tmp.color = "Yellow";
+                break;
+            case 3:
+                tmp.color = "Green";
+                break;
+            case 4:
+                tmp.color = "Blue";
+                break;
+        }
+
+        tmp.num = agents[currentAgent].hand[choice].num;
+        discard.push_back(tmp);
+        agents[currentAgent].hand.erase(agents[currentAgent].hand.begin() + choice);
+        return;
+    }
+
+    //update discard and hand accordingly
+    discard.push_back(agents[currentAgent].hand[choice]);
+    agents[currentAgent].hand.erase(agents[currentAgent].hand.begin() + choice);
     
 }
 
