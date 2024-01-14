@@ -28,11 +28,12 @@ struct agent{
 //Prototypes
 vector<card> makeDeck();
 vector<agent> makeAgents(int, int);
-void distributeCards(vector<card>&, vector<agent>&, card&);
+void distributeCards(vector<card>&, vector<card>&, vector<agent>&);
 void printHand(int, vector<agent>);
-void printTopCard(card);
+void printTopCard(vector<card>);
 void printNums(vector<agent>);
 void drawCard(int, vector<agent>&, vector<card>&);
+void playCard(int, vector<agent>&, vector<card>&, vector<card>&);
 
 void badInput();
 
@@ -67,18 +68,15 @@ int main(int argc, char* argv[]){
     //Establish discard
     vector<card> discard;
 
-    //Establish topcard
-    card topCard;
-
     //Distribute cards
-    distributeCards(deck, agents, topCard);
+    distributeCards(deck, discard, agents);
 
     int currentAgent = 0;
 
-    //gameplay loop
+    //Establish deck
     while(!win){
         if(agents[currentAgent].type == PLAYER){
-            printTopCard(topCard);
+            printTopCard(discard);
 
             int choice;
 
@@ -99,7 +97,7 @@ int main(int argc, char* argv[]){
                     printHand(currentAgent, agents);
                     break;
                 case 2:
-                    printTopCard(topCard);
+                    printTopCard(discard);
                     break;
                 case 3:
                     printNums(agents);
@@ -108,8 +106,7 @@ int main(int argc, char* argv[]){
                     drawCard(currentAgent, agents, deck);
                     break;
                 case 5:
-                    printHand(currentAgent, agents);
-                    //play function here
+                    playCard(currentAgent, agents, deck, discard);
                     break;
 
             
@@ -130,18 +127,22 @@ int main(int argc, char* argv[]){
 
 }
 
-void distributeCards(vector<card>& deck, vector<agent>& agents, card& topCard){
+void distributeCards(vector<card>& deck, vector<card>& discard, vector<agent>& agents){
     //deal 7 cards to every agent
     for(int i=0; i<agents.size(); i++){
         //add 7 cards to each agent
         while(agents[i].hand.size() < 7){
-            int tmp = rand() % deck.size(); //choose random card from deck
-            agents[i].hand.push_back(deck[tmp]); //put card into agent's hand
-            deck.erase(deck.begin() + tmp); //erase card from deck
+            drawCard(i, agents, deck);
         }
     }
-    int tmp = rand() % deck.size(); //choose random card from deck
-    topCard = deck[tmp]; //Set it as topcard
+    //Set topcard
+    int tmp = rand() % deck.size(); //get random card
+    discard.push_back(deck[tmp]); //Set it as topcard
+    do{
+        tmp = rand() % deck.size(); //get random card
+        discard[0] = deck[tmp]; //Set it as topcard
+    } while (deck[tmp].num > 9);
+
     deck.erase(deck.begin() + tmp); //erase card from deck
     
 }
@@ -235,21 +236,47 @@ void printHand(int current, vector<agent> agents){
     cout << endl;
 }
 
-void printTopCard(card topCard){
+void printTopCard(vector<card> discard){
+    card topCard = discard[discard.size() - 1];
     cout << "\nThe topcard is a " << topCard.color << " " << topCard.num << endl << endl;;
 }
 
 void printNums(vector<agent> agents){
     cout << "\nPlayer:\tCards:" << endl; 
     for(int i=0; i<agents.size(); i++){
-        cout << i << "\t" << agents[i].hand.size() << endl;
+        cout << i + 1 << "\t" << agents[i].hand.size() << endl;
     }
     cout << endl;
 }
 
 void drawCard(int currentAgent, vector<agent>& agents, vector<card>& deck){
-    cout << "Draw" << endl;
+    int tmp = rand() % deck.size(); //choose random card from deck
+    agents[currentAgent].hand.push_back(deck[tmp]); //Set it as topcard
+    deck.erase(deck.begin() + tmp); //erase card from deck
 }
+
+void playCard(int currentAgent, vector<agent>& agents, vector<card>& deck, vector<card>& discard){
+    printHand(currentAgent, agents);
+
+    int choice;
+    //Handle bad input
+    while((cout << "The ID of the card you wish to play: " && !(cin >> choice)) || choice < 0 || choice > agents[currentAgent].hand.size() - 1)
+        badInput();
+
+    
+}
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 void badInput(){
