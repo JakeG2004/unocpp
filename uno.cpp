@@ -1,5 +1,7 @@
 #include <iostream>
 #include <vector>
+#include <limits>
+#include <stdlib.h> 
 
 using namespace std;
 
@@ -14,7 +16,7 @@ enum vars {
 };
 
 struct card{
-    int color;
+    string color;
     int num;
 };
 
@@ -23,11 +25,21 @@ struct agent{
     int type;
 };
 
+//Prototypes
 vector<card> makeDeck();
 vector<agent> makeAgents(int, int);
-void distributeCards(vector<card>& deck, vector<agent>& agents);
+void distributeCards(vector<card>&, vector<agent>&, card&);
+void printHand(int, vector<agent>);
+void printTopCard(card);
+void printNums(vector<agent>);
+void drawCard(int, vector<agent>&, vector<card>&);
+
+void badInput();
 
 int main(int argc, char* argv[]){
+
+    bool win = false;
+    srand(time(0));
 
     //Ensure correct usage
     /*if(argc != 3){
@@ -52,23 +64,86 @@ int main(int argc, char* argv[]){
     //Establish deck
     vector<card> deck = makeDeck();
 
-    //Distribute cards
-    distributeCards(deck, agents);
+    //Establish discard
+    vector<card> discard;
 
-    for(int i=0; i<7; i++){
-        cout << agents[0].hand[i].num << endl;
+    //Establish topcard
+    card topCard;
+
+    //Distribute cards
+    distributeCards(deck, agents, topCard);
+
+    int currentAgent = 0;
+
+    //gameplay loop
+    while(!win){
+        if(agents[currentAgent].type == PLAYER){
+            printTopCard(topCard);
+
+            int choice;
+
+            //Prompt player
+            cout << "Player " << currentAgent + 1 << ", take your turn" << endl;
+            cout << "1) View hand\n"
+            << "2) View topcard\n"
+            << "3) View # of cards in other hands\n"
+            << "4) Draw a card\n"
+            << "5) Play a card\n";
+
+            //Handle bad input
+            while((cout << "> " && !(cin >> choice)) || choice < 1 || choice > 5)
+                badInput();
+
+            switch(choice){
+                case 1:
+                    printHand(currentAgent, agents);
+                    break;
+                case 2:
+                    printTopCard(topCard);
+                    break;
+                case 3:
+                    printNums(agents);
+                    break;
+                case 4:
+                    drawCard(currentAgent, agents, deck);
+                    break;
+                case 5:
+                    printHand(currentAgent, agents);
+                    //play function here
+                    break;
+
+            
+            //clear the screen
+            //cout << "\x1B[2J\x1B[H";
+
+            }
+
+            
+
+        } else {
+            cout << "Bot" << endl;
+        }
+
+
+        currentAgent = (currentAgent + 1) % agents.size(); //go to next agent
     }
+
 }
 
-void distributeCards(vector<card>& deck, vector<agent>& agents){
+void distributeCards(vector<card>& deck, vector<agent>& agents, card& topCard){
     //deal 7 cards to every agent
     for(int i=0; i<agents.size(); i++){
+        //add 7 cards to each agent
         while(agents[i].hand.size() < 7){
             int tmp = rand() % deck.size(); //choose random card from deck
             agents[i].hand.push_back(deck[tmp]); //put card into agent's hand
             deck.erase(deck.begin() + tmp); //erase card from deck
         }
     }
+    int tmp = rand() % deck.size(); //choose random card from deck
+    topCard = deck[tmp]; //Set it as topcard
+    deck.erase(deck.begin() + tmp); //erase card from deck
+    
 }
 
 vector<agent> makeAgents(int numPlayers, int numBots){
@@ -101,7 +176,20 @@ vector<card> makeDeck(){
 
             //make card
             card tmp;
-            tmp.color = i;
+            switch(i){
+                case 0:
+                    tmp.color = "Red";
+                    break;
+                case 1:
+                    tmp.color = "Yellow";
+                    break;
+                case 2:
+                    tmp.color = "Blue";
+                    break;
+                case 3:
+                    tmp.color = "Green";
+                    break;
+            }
             tmp.num = j;
 
             //append it to deck
@@ -115,7 +203,20 @@ vector<card> makeDeck(){
 
             //make card
             card tmp;
-            tmp.color = i;
+            switch(i){
+                case 0:
+                    tmp.color = "Red";
+                    break;
+                case 1:
+                    tmp.color = "Yellow";
+                    break;
+                case 2:
+                    tmp.color = "Blue";
+                    break;
+                case 3:
+                    tmp.color = "Green";
+                    break;
+            }
             tmp.num = j;
 
             //append it to deck
@@ -125,3 +226,44 @@ vector<card> makeDeck(){
     
     return deck;
 }
+
+void printHand(int current, vector<agent> agents){
+    cout << "\nColor:\tValue:\tID:" << endl;
+    for(int i=0; i<agents[current].hand.size(); i++){
+        cout << agents[current].hand[i].color << "\t" << agents[current].hand[i].num << "\t" << i << endl;
+    }
+    cout << endl;
+}
+
+void printTopCard(card topCard){
+    cout << "\nThe topcard is a " << topCard.color << " " << topCard.num << endl << endl;;
+}
+
+void printNums(vector<agent> agents){
+    cout << "\nPlayer:\tCards:" << endl; 
+    for(int i=0; i<agents.size(); i++){
+        cout << i << "\t" << agents[i].hand.size() << endl;
+    }
+    cout << endl;
+}
+
+void drawCard(int currentAgent, vector<agent>& agents, vector<card>& deck){
+    cout << "Draw" << endl;
+}
+
+
+void badInput(){
+    cin.clear(); //clear bad input flag
+    cin.ignore(numeric_limits<streamsize>::max(), '\n'); //discard input
+    cout << "Invalid input; please re-enter.\n";
+}
+
+
+
+
+
+
+
+
+
+
