@@ -29,11 +29,11 @@ struct agent{
 vector<card> makeDeck();
 vector<agent> makeAgents(int, int);
 void distributeCards(vector<card>&, vector<card>&, vector<agent>&);
-void printHand(int, vector<agent>);
+void printHand(agent&);
 void printTopCard(vector<card>);
 void printNums(vector<agent>);
-void drawCard(int, vector<agent>&, vector<card>&);
-void playCard(int, vector<agent>&, vector<card>&, vector<card>&);
+void drawCard(agent&, vector<card>&);
+void playCard(agent&, vector<card>&, vector<card>&);
 
 void badInput();
 
@@ -94,7 +94,7 @@ int main(int argc, char* argv[]){
 
             switch(choice){
                 case 1:
-                    printHand(currentAgent, agents);
+                    printHand(agents[currentAgent]);
                     break;
                 case 2:
                     printTopCard(discard);
@@ -103,10 +103,10 @@ int main(int argc, char* argv[]){
                     printNums(agents);
                     break;
                 case 4:
-                    drawCard(currentAgent, agents, deck);
+                    drawCard(agents[currentAgent], deck);
                     break;
                 case 5:
-                    playCard(currentAgent, agents, deck, discard);
+                    playCard(agents[currentAgent], deck, discard);
                     break;
 
             
@@ -132,7 +132,7 @@ void distributeCards(vector<card>& deck, vector<card>& discard, vector<agent>& a
     for(int i=0; i<agents.size(); i++){
         //add 7 cards to each agent
         while(agents[i].hand.size() < 7){
-            drawCard(i, agents, deck);
+            drawCard(agents[i], deck);
         }
     }
     //Set topcard
@@ -228,10 +228,10 @@ vector<card> makeDeck(){
     return deck;
 }
 
-void printHand(int current, vector<agent> agents){
+void printHand(agent& agent){
     cout << "\nColor:\tValue:\tID:" << endl;
-    for(int i=0; i<agents[current].hand.size(); i++){
-        cout << agents[current].hand[i].color << "\t" << agents[current].hand[i].num << "\t" << i << endl;
+    for(int i=0; i<agent.hand.size(); i++){
+        cout << agent.hand[i].color << "\t" << agent.hand[i].num << "\t" << i << endl;
     }
     cout << endl;
 }
@@ -249,31 +249,31 @@ void printNums(vector<agent> agents){
     cout << endl;
 }
 
-void drawCard(int currentAgent, vector<agent>& agents, vector<card>& deck){
+void drawCard(agent& agent, vector<card>& deck){
     int tmp = rand() % deck.size(); //choose random card from deck
-    agents[currentAgent].hand.push_back(deck[tmp]); //Set it as topcard
+    agent.hand.push_back(deck[tmp]); //Set it as topcard
     deck.erase(deck.begin() + tmp); //erase card from deck
 }
 
-void playCard(int currentAgent, vector<agent>& agents, vector<card>& deck, vector<card>& discard){
-    printHand(currentAgent, agents);
+void playCard(agent& agent, vector<card>& deck, vector<card>& discard){
+    printHand(agent);
 
     int choice;
 
     //Handle bad input
-    while((cout << "The ID of the card you wish to play: " && !(cin >> choice)) || choice < 0 || choice > agents[currentAgent].hand.size() - 1)
+    while((cout << "The ID of the card you wish to play: " && !(cin >> choice)) || choice < 0 || choice > agent.hand.size() - 1)
         badInput();
 
     card topCard = discard[discard.size() - 1];
 
     //Failure state
-    if((agents[currentAgent].hand[choice].color != topCard.color && agents[currentAgent].hand[choice].num != topCard.num) && agents[currentAgent].hand[choice].num < WILD){
+    if((agent.hand[choice].color != topCard.color && agent.hand[choice].num != topCard.num) && agent.hand[choice].num < WILD){
         cout << "This card cannot be played" << endl;
         return;
     }
 
     //In the event of a wild
-    if(agents[currentAgent].hand[choice].num >= WILD){
+    if(agent.hand[choice].num >= WILD){
         int colorChoice;
 
         cout << "1) Red\n"
@@ -301,15 +301,15 @@ void playCard(int currentAgent, vector<agent>& agents, vector<card>& deck, vecto
                 break;
         }
 
-        tmp.num = agents[currentAgent].hand[choice].num;
+        tmp.num = agent.hand[choice].num;
         discard.push_back(tmp);
-        agents[currentAgent].hand.erase(agents[currentAgent].hand.begin() + choice);
+        agent.hand.erase(agent.hand.begin() + choice);
         return;
     }
 
     //update discard and hand accordingly
-    discard.push_back(agents[currentAgent].hand[choice]);
-    agents[currentAgent].hand.erase(agents[currentAgent].hand.begin() + choice);
+    discard.push_back(agent.hand[choice]);
+    agent.hand.erase(agent.hand.begin() + choice);
     
 }
 
