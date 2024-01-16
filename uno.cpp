@@ -49,15 +49,15 @@ int main(int argc, char* argv[]){
     srand(time(0));
 
     //Ensure correct usage
-    /*if(argc != 3){
-        cout << "Incorrect usage! Proper usage: ./uno.out <number of players> <number of bots>" << endl;
+    if(argc != 2){
+        cout << "Incorrect usage! Proper usage: ./uno.out <number of players>" << endl;
         return -1;
-    }*/
+    }
 
-    //int numPlayers = stoi(argv[1]);
+    int numPlayers = stoi(argv[1]);
     //int numBots = stoi(argv[2]);
 
-    int numPlayers = 3;
+    //int numPlayers = 3;
     int numBots = 0;
 
     if(numPlayers + numBots > 10){
