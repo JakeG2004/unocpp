@@ -324,10 +324,13 @@ void printNums(vector<agent> agents){
 }
 
 void drawCard(agent& agent, vector<card>& deck, vector<card>& discard){
+
+    //reshuffle if deck is empty
     if(deck.size() == 0){
         deck = discard;
         discard = {};
         discard.push_back(deck[deck.size() - 1]);
+        deck.pop_back();
     }
 
     int tmp = rand() % deck.size(); //choose random card from deck
