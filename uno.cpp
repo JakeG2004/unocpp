@@ -34,11 +34,11 @@ void distributeCards(vector<card>&, vector<card>&, vector<agent>&);
 void printHand(agent&);
 void printTopCard(vector<card>);
 void printNums(vector<agent>);
-void drawCard(agent&, vector<card>&);
+void drawCard(agent&, vector<card>&, vector<card>&);
 int playCard(agent&, vector<card>&, vector<card>&);
 void playWild(int, agent&, vector<card>&);
 void reversePlay(int&, vector<agent>&);
-void plusCard(int, int, vector<agent>&, vector<card>&);
+void plusCard(int, int, vector<agent>&, vector<card>&, vector<card>&);
 void playerLoop(int&, int&, vector<agent>&, vector<card>&, vector<card>&);
 
 void badInput();
@@ -68,11 +68,11 @@ int main(int argc, char* argv[]){
     //add players and bots to agent vector
     vector<agent> agents = makeAgents(numPlayers, numBots);
 
-    //Establish deck
-    vector<card> deck = makeDeck();
-
     //Establish discard
     vector<card> discard;
+
+    //Establish deck
+    vector<card> deck = makeDeck();
 
     //Distribute cards
     distributeCards(deck, discard, agents);
@@ -102,14 +102,14 @@ int main(int argc, char* argv[]){
 }
 
 void playerLoop(int& currentAgent, int& skip, vector<agent>& agents, vector<card>& deck, vector<card>& discard){
+
     printTopCard(discard);
 
     int choice;
     bool repeatMenu = true;
     skip = 0;
 
-
-
+    //keep prompting until exit condition is met
     while(repeatMenu){
         //Prompt player
         cout << "Player " << agents[currentAgent].agentNum + 1 << ", take your turn" << endl;
@@ -135,7 +135,7 @@ void playerLoop(int& currentAgent, int& skip, vector<agent>& agents, vector<card
                 printNums(agents);
                 break;
             case 4:
-                drawCard(agents[currentAgent], deck);
+                drawCard(agents[currentAgent], deck, discard);
                 repeatMenu = false;
                 break;
             case 5:
@@ -151,10 +151,10 @@ void playerLoop(int& currentAgent, int& skip, vector<agent>& agents, vector<card
                         reversePlay(currentAgent, agents);
                         break;
                     case PLUS2:
-                        plusCard(2, currentAgent, agents, deck);
+                        plusCard(2, currentAgent, agents, deck, discard);
                         break;
                     case WILD4:
-                        plusCard(4, currentAgent, agents, deck);
+                        plusCard(4, currentAgent, agents, deck, discard);
                         break;
                 }
         }
@@ -167,7 +167,7 @@ void distributeCards(vector<card>& deck, vector<card>& discard, vector<agent>& a
     for(int i=0; i<agents.size(); i++){
         //add 7 cards to each agent
         while(agents[i].hand.size() < 7){
-            drawCard(agents[i], deck);
+            drawCard(agents[i], deck, discard);
         }
     }
     //Set topcard
@@ -323,7 +323,13 @@ void printNums(vector<agent> agents){
     cout << endl;
 }
 
-void drawCard(agent& agent, vector<card>& deck){
+void drawCard(agent& agent, vector<card>& deck, vector<card>& discard){
+    if(deck.size() == 0){
+        deck = discard;
+        discard = {};
+        discard.push_back(deck[deck.size() - 1]);
+    }
+
     int tmp = rand() % deck.size(); //choose random card from deck
     agent.hand.push_back(deck[tmp]); //Set it as topcard
     deck.erase(deck.begin() + tmp); //erase card from deck
@@ -412,11 +418,11 @@ void reversePlay(int& currentAgent, vector<agent>& agents){
     }
 }
 
-void plusCard(int n, int currentAgent, vector<agent>& agents, vector<card>& deck){
+void plusCard(int n, int currentAgent, vector<agent>& agents, vector<card>& deck, vector<card>& discard){
     int nextAgent = (currentAgent + 1) % agents.size(); //go to next agent
 
     for(int i=0; i<n; i++){
-        drawCard(agents[nextAgent], deck);
+        drawCard(agents[nextAgent], deck, discard);
     }
 }
 
