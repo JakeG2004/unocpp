@@ -6,6 +6,7 @@
 using namespace std;
 
 enum vars {
+    BACK = -1,
     PLAYER = 0,
     BOT = 1,
     SKIP = 10,
@@ -38,6 +39,7 @@ int playCard(agent&, vector<card>&, vector<card>&);
 void playWild(int, agent&, vector<card>&);
 void reversePlay(int&, vector<agent>&);
 void plusCard(int, int, vector<agent>&, vector<card>&);
+void playerLoop(int&, int&, vector<agent>&, vector<card>&, vector<card>&);
 
 void badInput();
 
@@ -58,8 +60,8 @@ int main(int argc, char* argv[]){
     int numPlayers = 3;
     int numBots = 0;
 
-    if(numPlayers + numBots > 15){
-        cout << "Error: Too many agents to play the game. Max of 15." << endl;
+    if(numPlayers + numBots > 10){
+        cout << "Error: Too many agents to play the game. Max of 10." << endl;
         return -2;
     }
 
@@ -81,64 +83,81 @@ int main(int argc, char* argv[]){
     //Establish deck
     while(!win){
         if(agents[currentAgent].type == PLAYER){
-            printTopCard(discard);
-
-            int choice;
-            skip = 0;
-
-            //Prompt player
-            cout << "Player " << agents[currentAgent].agentNum + 1 << ", take your turn" << endl;
-            cout << "1) View hand\n"
-            << "2) View topcard\n"
-            << "3) View # of cards in other hands\n"
-            << "4) Draw a card\n"
-            << "5) Play a card\n";
-
-            //Handle bad input            
-            while((cout << "> " && !(cin >> choice)) || choice < 1 || choice > 5)
-                badInput();
-
-            //Handle menu item
-            switch(choice){
-                case 1:
-                    printHand(agents[currentAgent]);
-                    break;
-                case 2:
-                    printTopCard(discard);
-                    break;
-                case 3:
-                    printNums(agents);
-                    break;
-                case 4:
-                    drawCard(agents[currentAgent], deck);
-                    break;
-                case 5:
-                    switch(playCard(agents[currentAgent], deck, discard)){
-                        case SKIP:
-                            skip = 1;
-                            break;
-                        case REVERSE:
-                            reversePlay(currentAgent, agents);
-                            break;
-                        case PLUS2:
-                            plusCard(2, currentAgent, agents, deck);
-                            break;
-                        case WILD4:
-                            plusCard(4, currentAgent, agents, deck);
-                            break;
-                    }
-            }
+            playerLoop(currentAgent, skip, agents, deck, discard);
         } else {
             cout << "Bot" << endl;
         }
 
+        //detect win
         if(agents[currentAgent].hand.size() == 0){
             win = true;
+            cout << "Player " << agents[currentAgent].agentNum + 1 << " wins!" << endl;
             break;
         }
 
 
         currentAgent = (currentAgent + 1 + skip) % agents.size(); //go to next agent
+    }
+
+}
+
+void playerLoop(int& currentAgent, int& skip, vector<agent>& agents, vector<card>& deck, vector<card>& discard){
+    printTopCard(discard);
+
+    int choice;
+    bool repeatMenu = true;
+    skip = 0;
+
+
+
+    while(repeatMenu){
+        //Prompt player
+        cout << "Player " << agents[currentAgent].agentNum + 1 << ", take your turn" << endl;
+        cout << "1) View hand\n"
+        << "2) View topcard\n"
+        << "3) View # of cards in other hands\n"
+        << "4) Draw a card\n"
+        << "5) Play a card\n";
+
+        //Handle bad input            
+        while((cout << "> " && !(cin >> choice)) || choice < 1 || choice > 5)
+            badInput();
+
+        //Handle menu item
+        switch(choice){
+            case 1:
+                printHand(agents[currentAgent]);
+                break;
+            case 2:
+                printTopCard(discard);
+                break;
+            case 3:
+                printNums(agents);
+                break;
+            case 4:
+                drawCard(agents[currentAgent], deck);
+                repeatMenu = false;
+                break;
+            case 5:
+                int tmp = playCard(agents[currentAgent], deck, discard);
+                if(tmp != BACK)
+                     repeatMenu = false;
+
+                switch(tmp){
+                    case SKIP:
+                        skip = 1;
+                        break;
+                    case REVERSE:
+                        reversePlay(currentAgent, agents);
+                        break;
+                    case PLUS2:
+                        plusCard(2, currentAgent, agents, deck);
+                        break;
+                    case WILD4:
+                        plusCard(4, currentAgent, agents, deck);
+                        break;
+                }
+        }
     }
 
 }
@@ -270,7 +289,6 @@ void printHand(agent& agent){
         }
         cout << i << "\t" << agent.hand[i].color << "\t" << tmp << endl;
     }
-    cout << endl;
 }
 
 void printTopCard(vector<card> discard){
@@ -313,13 +331,18 @@ void drawCard(agent& agent, vector<card>& deck){
 
 int playCard(agent& agent, vector<card>& deck, vector<card>& discard){
     printHand(agent);
+    cout << agent.hand.size() << "\t" << "Back" << endl;
     card topCard = discard[discard.size() - 1];
     int choice;
 
     //Handle bad input
-    while((cout << "The ID of the card you wish to play: " && !(cin >> choice)) || choice < 0 || choice > agent.hand.size() - 1){
+    while((cout << "The ID of the card you wish to play: " && !(cin >> choice)) || choice < 0 || choice > agent.hand.size()){
         badInput();
     }
+
+    //In the event of "back"
+    if(choice == agent.hand.size())
+        return BACK;
 
     //Failure state
     while((agent.hand[choice].color != topCard.color && agent.hand[choice].num != topCard.num) && agent.hand[choice].num < WILD){
